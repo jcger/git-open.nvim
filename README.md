@@ -9,20 +9,20 @@ Jump from your editor to your repository's web interface with a single keystroke
 ✅ What We Do Best
 
 1. Dual Context Awareness - Distinguish between upstream main and current branch
-2. Multi-Platform Support - GitHub, GitLab, Bitbucket, and custom Git hosts work out of the box 
-3. Minimal Setup - Zero configuration required to get started 
+2. Multi-Platform Support - GitHub, GitLab, Bitbucket, and custom Git hosts work out of the box
+3. Minimal Setup - Zero configuration required to get started
 
 🤔 Honest Comparison
 While other plugins may have overlapping features, git-open.nvim is designed specifically for developers who:
 
-- Need both upstream and current branch contexts regularly 
-- Work across multiple Git hosting platforms 
-- Want a lightweight solution without heavy dependencies 
+- Need both upstream and current branch contexts regularly
+- Work across multiple Git hosting platforms
+- Want a lightweight solution without heavy dependencies
 - Prefer simple keybinds over complex commands
 
 ## ✨ Why
 
-I didn't manage to configure any other plugin to work how I would like it too.
+I didn't manage to configure any other plugin to work how I would like it to.
 
 ## 🚀 Usage
 
@@ -31,7 +31,7 @@ I didn't manage to configure any other plugin to work how I would like it too.
 | Keymap        | Action                        | Description                                            |
 | :------------ | :---------------------------- | :----------------------------------------------------- |
 | `<leader>gou` | **G**it **O**pen **U**pstream | Open current file on upstream repository's main branch |
-| `<leader>goo` | **G**it **O**pen **O**origin  | Open current file on current branch                    |
+| `<leader>goo` | **G**it **O**pen **O**rigin  | Open current file on current branch                    |
 
 ### Commands
 
