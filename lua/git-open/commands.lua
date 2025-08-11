@@ -1,5 +1,28 @@
 local M = {}
 
+-- Configuration ----------------------------------------------------------------
+
+local defaults = {
+  default_branch = "main",
+  -- line_mode:
+  --   "auto"  -> Visual selection => range anchor, otherwise no anchor
+  --   "none"  -> never add line anchors
+  --   "cursor"-> always add current cursor line anchor
+  line_mode = "auto",
+}
+
+M.config = vim.tbl_deep_extend("force", {}, defaults)
+
+function M.setup(opts)
+  M.config = vim.tbl_deep_extend("force", {}, defaults, opts or {})
+  M.setup_commands()
+  if opts and opts.keymaps then
+    M.setup_keymaps(opts.keymaps)
+  end
+end
+
+-- Utilities --------------------------------------------------------------------
+
 -- Utility function to get the appropriate open command for the OS
 local function get_open_command()
   if vim.fn.has("mac") == 1 then
@@ -40,9 +63,8 @@ local function open_in_browser(url)
     return false
   end
 
-  local success = vim.fn.system(open_cmd .. ' "' .. url .. '"')
+  local _ = vim.fn.system(open_cmd .. ' "' .. url .. '"')
   if vim.v.shell_error == 0 then
-    vim.notify("Opened: " .. url, vim.log.levels.INFO)
     return true
   else
     vim.notify("Failed to open URL in browser", vim.log.levels.ERROR)
@@ -77,7 +99,7 @@ local function get_relative_path()
   return relative_path
 end
 
--- New: helpers for host, blob/src segment and line anchors --------------------
+-- New: helpers for host, blob/src segment and line anchors ---------------------
 
 local function get_host(url)
   return url:match("^https?://([^/]+)/")
@@ -110,6 +132,10 @@ local function get_selected_or_current_line_range()
   end
 end
 
+local function get_current_line_only()
+  return vim.api.nvim_win_get_cursor(0)[1]
+end
+
 local function build_line_anchor(url, start_line, end_line)
   local host = get_host(url)
   if not host or not start_line or start_line <= 0 then
@@ -136,8 +162,57 @@ local function build_line_anchor(url, start_line, end_line)
   end
 end
 
+-- Anchor decision logic --------------------------------------------------------
+
+local function compute_anchor_lines(opts)
+  -- Priority:
+  -- 1) Explicit range from user command (:<,'>GitOpen...)
+  -- 2) Bang forces current line
+  -- 3) Config line_mode
+  opts = opts or {}
+
+  if opts.range and opts.range > 0 and opts.line1 and opts.line2 then
+    local s, e = opts.line1, opts.line2
+    if s > e then
+      s, e = e, s
+    end
+    return s, e
+  end
+
+  if opts.bang then
+    local l = vim.api.nvim_win_get_cursor(0)[1]
+    return l, l
+  end
+
+  local mode = M.config.line_mode
+  if mode == "cursor" then
+    local l = vim.api.nvim_win_get_cursor(0)[1]
+    return l, l
+  elseif mode == "auto" then
+    -- If invoked from a visual mapping that calls the Lua function directly,
+    -- the visual mode may have ended; prefer command -range for accuracy.
+    -- Fallback to live visual detection:
+    if is_visual_mode() then
+      local s = vim.fn.line("'<")
+      local e = vim.fn.line("'>")
+      if s > e then
+        s, e = e, s
+      end
+      return s, e
+    end
+    return nil, nil
+  else
+    -- "none"
+    return nil, nil
+  end
+end
+
+-- Openers ----------------------------------------------------------------------
+
 -- Open file on upstream main branch
-function M.open_upstream_main()
+function M.open_upstream_main(opts)
+  opts = opts or {}
+
   if not is_git_repo() then
     vim.notify("Not in a git repository", vim.log.levels.ERROR)
     return
@@ -169,20 +244,24 @@ function M.open_upstream_main()
     return
   end
 
-  local config = require("git-open").config
   local host = get_host(upstream_url)
   local segment = get_blob_segment_for_host(host)
 
-  local s, e = get_selected_or_current_line_range()
-  local anchor = build_line_anchor(upstream_url, s, e)
+  local s, e = compute_anchor_lines(opts)
+  local anchor = ""
+  if s and s > 0 then
+    anchor = build_line_anchor(upstream_url, s, e or s)
+  end
 
-  local browser_url = upstream_url .. segment .. config.default_branch .. "/" .. file_path .. anchor
+  local browser_url = upstream_url .. segment .. M.config.default_branch .. "/" .. file_path .. anchor
 
   open_in_browser(browser_url)
 end
 
 -- Open file on current branch
-function M.open_current_branch()
+function M.open_current_branch(opts)
+  opts = opts or {}
+
   if not is_git_repo() then
     vim.notify("Not in a git repository", vim.log.levels.ERROR)
     return
@@ -229,44 +308,102 @@ function M.open_current_branch()
   local host = get_host(remote_url)
   local segment = get_blob_segment_for_host(host)
 
-  local s, e = get_selected_or_current_line_range()
-  local anchor = build_line_anchor(remote_url, s, e)
+  local s, e = compute_anchor_lines(opts)
+  local anchor = ""
+  if s and s > 0 then
+    anchor = build_line_anchor(remote_url, s, e or s)
+  end
 
   local browser_url = remote_url .. segment .. current_branch .. "/" .. file_path .. anchor
 
   open_in_browser(browser_url)
 end
 
--- Setup user commands
+-- Backward-compatible helpers: always open at current cursor line --------------
+
+-- Open file on upstream main branch at current cursor line (single line)
+function M.open_upstream_main_same_line()
+  M.open_upstream_main({ bang = true })
+end
+
+-- Open file on current branch at current cursor line (single line)
+function M.open_current_branch_same_line()
+  M.open_current_branch({ bang = true })
+end
+
+-- Setup user commands ----------------------------------------------------------
+
 function M.setup_commands()
-  vim.api.nvim_create_user_command("GitOpenUpstreamMain", M.open_upstream_main, {
+  vim.api.nvim_create_user_command("GitOpenUpstreamMain", function(cmd_opts)
+    M.open_upstream_main(cmd_opts)
+  end, {
     desc = "Open current file on upstream main branch in browser",
+    range = true,
+    bang = true,
   })
 
-  vim.api.nvim_create_user_command("GitOpenCurrentBranch", M.open_current_branch, {
+  vim.api.nvim_create_user_command("GitOpenCurrentBranch", function(cmd_opts)
+    M.open_current_branch(cmd_opts)
+  end, {
     desc = "Open current file on current branch in browser",
+    range = true,
+    bang = true,
+  })
+
+  -- Legacy commands: route to forced 'cursor' behavior
+  vim.api.nvim_create_user_command("GitOpenUpstreamMainLine", function()
+    M.open_upstream_main({ bang = true })
+  end, {
+    desc = "Open current file on upstream main at current line in browser",
+  })
+
+  vim.api.nvim_create_user_command("GitOpenCurrentBranchLine", function()
+    M.open_current_branch({ bang = true })
+  end, {
+    desc = "Open current file on current branch at current line in browser",
   })
 end
 
--- Setup keymaps
+-- Setup keymaps ----------------------------------------------------------------
+
 function M.setup_keymaps(keymaps)
   if keymaps.upstream_main then
-    vim.keymap.set("n", keymaps.upstream_main, M.open_upstream_main, {
+    -- Normal: no anchor (per config), Visual: range anchor via -range
+    vim.keymap.set("n", keymaps.upstream_main, function()
+      M.open_upstream_main({})
+    end, {
       desc = "Open file on upstream main in browser (git open upstream)",
     })
-    -- Optional: support directly from visual mode too
-    vim.keymap.set("v", keymaps.upstream_main, M.open_upstream_main, {
+    vim.keymap.set("v", keymaps.upstream_main, ":GitOpenUpstreamMain<CR>", {
       desc = "Open selection on upstream main in browser (git open upstream)",
     })
   end
 
   if keymaps.current_branch then
-    vim.keymap.set("n", keymaps.current_branch, M.open_current_branch, {
+    vim.keymap.set("n", keymaps.current_branch, function()
+      M.open_current_branch({})
+    end, {
       desc = "Open file on current branch in browser (git open origin)",
     })
-    -- Optional: support directly from visual mode too
-    vim.keymap.set("v", keymaps.current_branch, M.open_current_branch, {
+    vim.keymap.set("v", keymaps.current_branch, ":GitOpenCurrentBranch<CR>", {
       desc = "Open selection on current branch in browser (git open origin)",
+    })
+  end
+
+  -- Force current line anchor regardless of config
+  if keymaps.upstream_main_line then
+    vim.keymap.set("n", keymaps.upstream_main_line, function()
+      M.open_upstream_main({ bang = true })
+    end, {
+      desc = "Open current line on upstream main in browser",
+    })
+  end
+
+  if keymaps.current_branch_line then
+    vim.keymap.set("n", keymaps.current_branch_line, function()
+      M.open_current_branch({ bang = true })
+    end, {
+      desc = "Open current line on current branch in browser",
     })
   end
 end

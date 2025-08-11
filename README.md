@@ -35,10 +35,11 @@ I didn't manage to configure any other plugin to work how I would like it to.
 
 ### Commands
 
-| Command                 | Description                               |
-| :---------------------- | :---------------------------------------- |
-| `:GitOpenUpstreamMain`  | Open current file on upstream main branch |
-| `:GitOpenCurrentBranch` | Open current file on current branch       |
+| Command                | Description                               |
+| :--------------------- | :---------------------------------------- |
+| `:GitOpenUpstreamMain` | Open current file on upstream main branch |
+
+|Note: Both commands accept a Visual selection as a range and will include it in the URL anchor. `:GitOpenCurrentBranch` | Open current file on current branch |
 
 ## 📸 Examples
 
@@ -48,6 +49,9 @@ I didn't manage to configure any other plugin to work how I would like it to.
 
 # Share your current work
 <leader>goo → https://github.com/origin/repo/blob/feature-branch/src/file.lua
+
+# Visual selection (e.g., lines 10–20), then open on current branch
+<leader>goo → https://github.com/origin/repo/blob/feature-branch/src/file.lua#L10-L20
 ```
 
 ## 📦 Installation
