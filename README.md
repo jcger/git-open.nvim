@@ -31,7 +31,7 @@ I didn't manage to configure any other plugin to work how I would like it to.
 | Keymap        | Action                        | Description                                            |
 | :------------ | :---------------------------- | :----------------------------------------------------- |
 | `<leader>gou` | **G**it **O**pen **U**pstream | Open current file on upstream repository's main branch |
-| `<leader>goo` | **G**it **O**pen **O**rigin  | Open current file on current branch                    |
+| `<leader>goo` | **G**it **O**pen **O**rigin   | Open current file on current branch                    |
 
 ### Commands
 

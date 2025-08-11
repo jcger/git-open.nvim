@@ -1,6 +1,6 @@
 -- Auto-setup if the plugin is loaded
 if vim.g.loaded_git_open then
-	return
+  return
 end
 vim.g.loaded_git_open = 1
 
