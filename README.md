@@ -35,11 +35,12 @@ I didn't manage to configure any other plugin to work how I would like it to.
 
 ### Commands
 
-| Command                | Description                               |
-| :--------------------- | :---------------------------------------- |
-| `:GitOpenUpstreamMain` | Open current file on upstream main branch |
+| Command                 | Description                               |
+| :---------------------- | :---------------------------------------- |
+| `:GitOpenUpstreamMain`  | Open current file on upstream main branch |
+| `:GitOpenCurrentBranch` | Open current file on current branch       |
 
-|Note: Both commands accept a Visual selection as a range and will include it in the URL anchor. `:GitOpenCurrentBranch` | Open current file on current branch |
+Note: Both commands accept a Visual selection as a range and will include it in the URL anchor.
 
 ## 📸 Examples
 
