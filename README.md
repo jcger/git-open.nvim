@@ -1,57 +1,36 @@
 # git-open.nvim
 
-🚀 **A Neovim plugin to open your current file in the browser on GitHub, GitLab, or Bitbucket.**
+🚀 **Open your current file in the browser on GitHub, GitLab, or Bitbucket from Neovim.**
 
-Jump from your editor to your repository's web interface with a single keystroke. Perfect for code reviews, sharing links, or viewing files in context.
+**Features:**
 
-**git-open.nvim** focuses on solving a specific problem really well:
-
-✅ What We Do Best
-
-1. Dual Context Awareness - Distinguish between upstream main and current branch
-2. Multi-Platform Support - GitHub, GitLab, Bitbucket, and custom Git hosts work out of the box
-3. Minimal Setup - Zero configuration required to get started
-
-🤔 Honest Comparison
-While other plugins may have overlapping features, git-open.nvim is designed specifically for developers who:
-
-- Need both upstream and current branch contexts regularly
-- Work across multiple Git hosting platforms
-- Want a lightweight solution without heavy dependencies
-- Prefer simple keybinds over complex commands
-
-## ✨ Why
-
-I didn't manage to configure any other plugin to work how I would like it to.
+- Open files on upstream main branch or current branch
+- Support for GitHub, GitLab, Bitbucket, and custom Git hosts
+- Zero configuration required
+- Visual selection support with line anchors
 
 ## 🚀 Usage
 
-### Keymaps
+**Keymaps:**
 
-| Keymap        | Action                        | Description                                            |
-| :------------ | :---------------------------- | :----------------------------------------------------- |
-| `<leader>gou` | **G**it **O**pen **U**pstream | Open current file on upstream repository's main branch |
-| `<leader>goo` | **G**it **O**pen **O**rigin   | Open current file on current branch                    |
+- `<leader>gou` - Open file on upstream main branch
+- `<leader>goo` - Open file on current branch
 
-### Commands
+**Commands:**
 
-| Command                 | Description                               |
-| :---------------------- | :---------------------------------------- |
-| `:GitOpenUpstreamMain`  | Open current file on upstream main branch |
-| `:GitOpenCurrentBranch` | Open current file on current branch       |
-
-Note: Both commands accept a Visual selection as a range and will include it in the URL anchor.
+- `:GitOpenUpstreamMain` - Open file on upstream main branch
+- `:GitOpenCurrentBranch` - Open file on current branch
 
 ## 📸 Examples
 
 ```bash
-# Compare with upstream main
+# Open on upstream main
 <leader>gou → https://github.com/upstream/repo/blob/main/src/file.lua
 
-# Share your current work
+# Open on current branch
 <leader>goo → https://github.com/origin/repo/blob/feature-branch/src/file.lua
 
-# Visual selection (e.g., lines 10–20), then open on current branch
+# With visual selection (lines 10-20)
 <leader>goo → https://github.com/origin/repo/blob/feature-branch/src/file.lua#L10-L20
 ```
 
